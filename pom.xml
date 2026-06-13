@@ -18,7 +18,6 @@
         <metis.core.types.version>0.0.1</metis.core.types.version>
     </properties>
 
-
     <scm>
         <developerConnection>scm:git:ssh://git@github.com/de-gupta/finance.trading.metis.core.instrument.git</developerConnection>
         <url>https://github.com/de-gupta/finance.trading.metis.core.instrument.git</url>
