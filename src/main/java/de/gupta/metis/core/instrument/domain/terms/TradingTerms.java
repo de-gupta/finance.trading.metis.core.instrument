@@ -39,7 +39,7 @@ public record TradingTerms<U extends PriceQuotingUnit, V extends SizeQuotingUnit
 		Unfolding.beckon(roundLot)
 		         .metamorphose(SizeType::value)
 		         .discern(v -> v.isGreaterThan(TradingNumberFactory.zero()),
-						 ExceptionHelper.iaeFrom("Round lot may not be negative"));
+						 ExceptionHelper.iaeFrom("Round lot must be positive"));
 
 		Unfolding.beckon(priceConvention.unit())
 		         .evolve(u -> u instanceof CurrencyPriceUnit<?>, u -> (CurrencyPriceUnit<?>) u)
