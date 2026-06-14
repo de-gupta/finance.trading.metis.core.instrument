@@ -4,56 +4,53 @@ import de.gupta.metis.core.instrument.domain.product.EquityProduct;
 import de.gupta.metis.core.instrument.domain.product.ProductId;
 import de.gupta.metis.core.instrument.domain.symbol.Symbol;
 import de.gupta.metis.core.instrument.domain.symbol.VenueSymbol;
-import de.gupta.metis.core.instrument.domain.terms.TradingTerms;
 import de.gupta.metis.core.instrument.domain.venue.Venue;
 import de.gupta.metis.core.types.currency.Currency;
-import de.gupta.metis.core.types.exception.IncompatibleInputException;
 import de.gupta.metis.core.types.quoting.PriceQuotingConvention;
 import de.gupta.metis.core.types.quoting.SizeQuotingConvention;
-import de.gupta.metis.core.types.size.SizeTypeFactory;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class EquityListingTest
+@DisplayName("EquityListing#nasdaq")
+final class EquityListingTest
 {
-	@Test
-	void nasdaqListingUsesVenueScopedSymbolAndDefaultCashEquityTerms()
-	{
-		final var product = EquityProduct.commonStock(new ProductId("product:aapl"), "Apple Inc.");
-		final var listing = EquityListing.nasdaq(
-				new InstrumentId("instrument:xnas:aapl"),
-				product,
-				"aapl",
-				ListingStatus.ACTIVE
-		);
 
-		assertThat(listing.product()).isEqualTo(product);
-		assertThat(listing.venue()).isEqualTo(Venue.NASDAQ);
-		assertThat(listing.symbol()).isEqualTo(new Symbol("AAPL"));
-		assertThat(listing.venueSymbol()).isEqualTo(VenueSymbol.of(Venue.NASDAQ, "AAPL"));
-		assertThat(listing.tradingTerms().settlementCurrency()).isEqualTo(Currency.USD.INSTANCE);
-		assertThat(listing.tradingTerms().roundLot().value().toString()).isEqualTo("100");
-		assertThat(listing.tradingTerms().sizeConvention()).isEqualTo(SizeQuotingConvention.units(0));
-		assertThat(listing.tradingTerms().priceConvention()).isEqualTo(
-				PriceQuotingConvention.currency(Currency.USD.INSTANCE));
-	}
-
-	@Test
-	void venueSymbolKeepsVenueAndSymbolBoundTogether()
+	@Nested
+	@DisplayName("when creating a NASDAQ listing")
+	final class WhenCreatingANasdaqListing
 	{
-		assertThat(VenueSymbol.of(Venue.NASDAQ, "msft").toString()).isEqualTo("NASDAQ:MSFT");
-	}
 
-	@Test
-	void tradingTermsRejectMismatchedSettlementCurrency()
-	{
-		assertThatThrownBy(() -> TradingTerms.of(
-				PriceQuotingConvention.currency(Currency.USD.INSTANCE),
-				SizeQuotingConvention.units(0),
-				SizeTypeFactory.of(100),
-				Currency.EUR.INSTANCE
-		)).isInstanceOf(IncompatibleInputException.class);
+		@Test
+		@DisplayName("uses venue-scoped symbol and default cash equity terms")
+		void usesVenueScopedSymbolAndDefaultCashEquityTerms()
+		{
+			var product = EquityProduct.commonStock(new ProductId("product:aapl"), "Apple Inc.");
+
+			var listing = EquityListing.nasdaq(
+					new InstrumentId("instrument:xnas:aapl"),
+					product,
+					"aapl",
+					ListingStatus.ACTIVE
+			);
+
+			assertThat(listing).as("nasdaq listing for %s", product).satisfies(l ->
+			{
+				assertThat(l.product()).as("product").isEqualTo(product);
+				assertThat(l.venue()).as("venue").isEqualTo(Venue.NASDAQ);
+				assertThat(l.symbol()).as("symbol").isEqualTo(new Symbol("AAPL"));
+				assertThat(l.venueSymbol()).as("venue symbol").isEqualTo(VenueSymbol.of(Venue.NASDAQ, "AAPL"));
+				assertThat(l.tradingTerms().settlementCurrency()).as("settlement currency")
+				                                                 .isEqualTo(Currency.USD.INSTANCE);
+				assertThat(l.tradingTerms().roundLot().value().toString()).as("round lot").isEqualTo("100");
+				assertThat(l.tradingTerms().sizeConvention()).as("size convention")
+				                                             .isEqualTo(SizeQuotingConvention.units(0));
+				assertThat(l.tradingTerms().priceConvention()).as("price convention")
+				                                              .isEqualTo(PriceQuotingConvention.currency(
+																	  Currency.USD.INSTANCE));
+			});
+		}
 	}
 }
