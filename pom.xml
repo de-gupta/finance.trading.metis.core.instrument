@@ -16,6 +16,7 @@
 
     <properties>
         <metis.core.types.version>0.0.1</metis.core.types.version>
+        <athena.version>0.9.3-SNAPSHOT</athena.version>
     </properties>
 
     <scm>
@@ -37,6 +38,7 @@
         <dependency>
             <groupId>io.github.de-gupta</groupId>
             <artifactId>athena</artifactId>
+            <version>${athena.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

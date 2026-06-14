@@ -1,19 +1,50 @@
 package de.gupta.metis.core.instrument.domain.terms;
 
+import de.gupta.aletheia.functional.Unfolding;
+import de.gupta.commons.utility.exception.ExceptionHelper;
 import de.gupta.metis.core.types.currency.Currency;
-import de.gupta.metis.core.types.quoting.PriceQuotingConvention;
-import de.gupta.metis.core.types.quoting.PriceQuotingUnit;
-import de.gupta.metis.core.types.quoting.SizeQuotingConvention;
-import de.gupta.metis.core.types.quoting.SizeQuotingUnit;
+import de.gupta.metis.core.types.exception.IncompatibleInputException;
+import de.gupta.metis.core.types.number.TradingNumberFactory;
+import de.gupta.metis.core.types.quoting.*;
 import de.gupta.metis.core.types.size.SizeType;
+import de.gupta.metis.core.types.size.SizeTypeFactory;
 
-public interface TradingTerms<U extends PriceQuotingUnit, V extends SizeQuotingUnit>
+public record TradingTerms<U extends PriceQuotingUnit, V extends SizeQuotingUnit>(
+		PriceQuotingConvention<U> priceConvention, SizeQuotingConvention<V> sizeConvention, SizeType roundLot,
+		Currency settlementCurrency)
 {
-	PriceQuotingConvention<U> priceConvention();
+	public static <U extends PriceQuotingUnit, V extends SizeQuotingUnit> TradingTerms<U, V> of(
+			final PriceQuotingConvention<U> priceConvention, final SizeQuotingConvention<V> sizeConvention,
+			final SizeType roundLot, final Currency settlementCurrency)
+	{
+		return new TradingTerms<>(priceConvention, sizeConvention, roundLot, settlementCurrency);
+	}
 
-	SizeQuotingConvention<V> sizeConvention();
+	public static <C extends Currency> TradingTerms<CurrencyPriceUnit<C>, SizeQuotingUnit.Units> cashEquity(
+			final C settlementCurrency, final SizeType roundLot)
+	{
+		return TradingTerms.of(PriceQuotingConvention.currency(settlementCurrency), SizeQuotingConvention.units(0),
+				roundLot, settlementCurrency);
+	}
 
-	SizeType roundLot();
+	public static <C extends Currency> TradingTerms<CurrencyPriceUnit<C>, SizeQuotingUnit.Units> cashEquity(
+			final C settlementCurrency)
+	{
+		return cashEquity(settlementCurrency, SizeTypeFactory.of(100));
+	}
 
-	Currency settlementCurrency();
+	public TradingTerms
+	{
+		// TODO: simpolify once there is a concept of positiveness in TradingNumber
+		Unfolding.beckon(roundLot)
+		         .metamorphose(SizeType::value)
+		         .discern(v -> v.isGreaterThan(TradingNumberFactory.zero()),
+						 ExceptionHelper.iaeFrom("Round lot may not be negative"));
+
+		Unfolding.beckon(priceConvention.unit())
+		         .evolve(u -> u instanceof CurrencyPriceUnit<?>, u -> (CurrencyPriceUnit<?>) u)
+		         .discern(u -> u.currency().equals(settlementCurrency),
+						 IncompatibleInputException.from("Settlement currency must match the currency price " +
+								 "convention"));
+	}
 }
