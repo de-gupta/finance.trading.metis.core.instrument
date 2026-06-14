@@ -87,6 +87,26 @@ final class EquityOptionListingTest
 			});
 		}
 
+		@ParameterizedTest(name = "{0}")
+		@MethodSource("forwardsThroughTheRecordUsdFactoryCases")
+		@DisplayName("forwards through the record USD factory")
+		void forwardsThroughTheRecordUsdFactory(final String as, final EquityOptionProduct<?> product,
+		                                        final InstrumentId instrumentId, final VenueSymbol venueSymbol,
+		                                        final ListingStatus status)
+		{
+			var listing = EquityOptionListing.usdListed(instrumentId, product, venueSymbol, status);
+
+			assertSoftly(softly ->
+			{
+				softly.assertThat(listing.id()).as("%s id", as).isEqualTo(instrumentId);
+				softly.assertThat(listing.product()).as("%s product", as).isEqualTo(product);
+				softly.assertThat(listing.venueSymbol()).as("%s venue symbol", as).isEqualTo(venueSymbol);
+				softly.assertThat(listing.status()).as("%s status", as).isEqualTo(status);
+				softly.assertThat(listing.tradingTerms()).as("%s trading terms", as)
+				      .isEqualTo(TradingTerms.listedOption(Currency.USD.INSTANCE));
+			});
+		}
+
 		private static Stream<Arguments> usesVenueScopedSymbolAndDefaultListedOptionTermsCases()
 		{
 			return Stream.of(
@@ -99,6 +119,26 @@ final class EquityOptionListingTest
 					),
 					Arguments.of(
 							"MSFT halted option listing",
+							standardMsftPut(),
+							new InstrumentId("instrument:xcbo:msft-20260320-p-400"),
+							VenueSymbol.of(CBOE, "MSFT  260320P00400000"),
+							ListingStatus.HALTED
+					)
+			);
+		}
+
+		private static Stream<Arguments> forwardsThroughTheRecordUsdFactoryCases()
+		{
+			return Stream.of(
+					Arguments.of(
+							"AAPL record USD factory call",
+							standardAaplCall(),
+							new InstrumentId("instrument:xcbo:aapl-20260116-c-250"),
+							VenueSymbol.of(CBOE, "AAPL  260116C00250000"),
+							ListingStatus.ACTIVE
+					),
+					Arguments.of(
+							"MSFT record USD factory call",
 							standardMsftPut(),
 							new InstrumentId("instrument:xcbo:msft-20260320-p-400"),
 							VenueSymbol.of(CBOE, "MSFT  260320P00400000"),
@@ -252,6 +292,36 @@ final class EquityOptionListingTest
 			});
 		}
 
+		@ParameterizedTest(name = "{0}")
+		@MethodSource("capturesCompositeFigiThroughBuilderShortcutCases")
+		@DisplayName("captures composite FIGI through the builder shortcut")
+		void capturesCompositeFigiThroughTheBuilderShortcut(final String as, final EquityOptionProduct<?> product,
+		                                                    final InstrumentId instrumentId,
+		                                                    final String inputSymbol,
+		                                                    final ListingStatus status,
+		                                                    final String compositeFigi)
+		{
+			var listing = EquityOptionListings.usdBuilder()
+			                                  .id(instrumentId)
+			                                  .product(product)
+			                                  .venueSymbol(CBOE, inputSymbol)
+			                                  .status(status)
+			                                  .compositeFigi(compositeFigi)
+			                                  .build();
+
+			assertSoftly(softly ->
+			{
+				softly.assertThat(listing.venue()).as("%s venue", as).isEqualTo(CBOE);
+				softly.assertThat(listing.symbol()).as("%s symbol", as)
+				      .isEqualTo(new Symbol(inputSymbol.toUpperCase()));
+				softly.assertThat(listing.status()).as("%s status", as).isEqualTo(status);
+				softly.assertThat(listing.identifiers().find(OptionListingIdentifierScheme.COMPOSITE_FIGI))
+				      .as("%s composite FIGI", as)
+				      .hasValueSatisfying(v -> softly.assertThat(v.value()).as("%s composite FIGI value", as)
+				                                     .isEqualTo(compositeFigi.toUpperCase()));
+			});
+		}
+
 		private static Stream<Arguments> defaultsMissingIdentifiersThroughDirectConstructionCases()
 		{
 			return Stream.of(
@@ -288,6 +358,18 @@ final class EquityOptionListingTest
 					Arguments.of("MSFT USD builder shortcut listing", standardMsftPut(),
 							new InstrumentId("instrument:xcbo:msft-20260320-p-400"), "MSFT  260320P00400000",
 							ListingStatus.HALTED, false, "msft  260320p00400000", "bbg00optionx02")
+			);
+		}
+
+		private static Stream<Arguments> capturesCompositeFigiThroughBuilderShortcutCases()
+		{
+			return Stream.of(
+					Arguments.of("AAPL composite FIGI builder shortcut", standardAaplCall(),
+							new InstrumentId("instrument:xcbo:aapl-20260116-c-250"), "AAPL  260116C00250000",
+							ListingStatus.ACTIVE, "bbg00optionc01"),
+					Arguments.of("MSFT composite FIGI builder shortcut", standardMsftPut(),
+							new InstrumentId("instrument:xcbo:msft-20260320-p-400"), "MSFT  260320P00400000",
+							ListingStatus.HALTED, "bbg00optionc02")
 			);
 		}
 	}

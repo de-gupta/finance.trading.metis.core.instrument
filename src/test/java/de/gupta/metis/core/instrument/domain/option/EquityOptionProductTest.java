@@ -64,6 +64,50 @@ final class EquityOptionProductTest
 							OptionRight.PUT, LocalDate.of(2026, 3, 20), 140L, OptionExerciseStyle.BERMUDAN)
 			);
 		}
+
+		@ParameterizedTest(name = "{0}")
+		@MethodSource("forwardsThroughTheRecordFactoryCases")
+		@DisplayName("forwards through the record factory")
+		void forwardsThroughTheRecordFactory(final String as, final ProductId productId, final EquityProduct underlying,
+		                                     final OptionRight right, final LocalDate expiryDate,
+		                                     final StrikePrice<CurrencyPriceUnit<Currency.USD>> strikePrice,
+		                                     final OptionExerciseStyle exerciseStyle)
+		{
+			var product = EquityOptionProduct.standardContract(productId, underlying, right, expiryDate, strikePrice,
+					exerciseStyle);
+
+			assertSoftly(softly ->
+			{
+				softly.assertThat(product.id()).as("%s id", as).isEqualTo(productId);
+				softly.assertThat(product.underlying()).as("%s underlying", as).isEqualTo(underlying);
+				softly.assertThat(product.right()).as("%s right", as).isEqualTo(right);
+				softly.assertThat(product.expiryDate()).as("%s expiry date", as).isEqualTo(expiryDate);
+				softly.assertThat(product.strikePrice()).as("%s strike price", as).isEqualTo(strikePrice);
+				softly.assertThat(product.exerciseStyle()).as("%s exercise style", as).isEqualTo(exerciseStyle);
+				softly.assertThat(product.settlementStyle()).as("%s settlement style", as)
+				      .isEqualTo(OptionSettlementStyle.PHYSICAL_DELIVERY);
+			});
+		}
+
+		private static Stream<Arguments> forwardsThroughTheRecordFactoryCases()
+		{
+			return Stream.of(
+					Arguments.of("AAPL direct record factory call",
+							new ProductId("product:aapl-20260116-c-250"),
+							EquityProducts.commonStock(new ProductId("product:aapl"), "Apple Inc."),
+							OptionRight.CALL,
+							LocalDate.of(2026, 1, 16),
+							StrikePrice.of(250L, Currency.USD.INSTANCE),
+							OptionExerciseStyle.AMERICAN),
+					Arguments.of("MSFT direct record factory call",
+							new ProductId("product:msft-20260320-p-400"),
+							EquityProducts.commonStock(new ProductId("product:msft"), "Microsoft Corporation"),
+							OptionRight.PUT,
+							LocalDate.of(2026, 3, 20),
+							StrikePrice.of(400L, Currency.USD.INSTANCE),
+							OptionExerciseStyle.EUROPEAN)
+			);
+		}
 	}
 
 	@Nested
@@ -112,6 +156,33 @@ final class EquityOptionProductTest
 				      .as("%s OCC series key", as)
 				      .hasValueSatisfying(v -> softly.assertThat(v.value()).as("%s OCC series key value", as)
 				                                     .isEqualTo(occSeriesKey.toUpperCase()));
+			});
+		}
+
+		@ParameterizedTest(name = "{0}")
+		@MethodSource("capturesIsinThroughBuilderShortcutCases")
+		@DisplayName("captures ISIN through the builder shortcut")
+		void capturesIsinThroughTheBuilderShortcut(final String as, final ProductId productId,
+		                                           final EquityProduct underlying, final String isin)
+		{
+			var product = EquityOptionProduct.<CurrencyPriceUnit<Currency.USD>>builder()
+			                                 .id(productId)
+			                                 .underlying(underlying)
+			                                 .right(OptionRight.CALL)
+			                                 .expiryDate(LocalDate.of(2026, 1, 16))
+			                                 .strikePrice(StrikePrice.of(250L, Currency.USD.INSTANCE))
+			                                 .isin(isin)
+			                                 .build();
+
+			assertSoftly(softly ->
+			{
+				softly.assertThat(product.identifiers().find(OptionProductIdentifierScheme.ISIN))
+				      .as("%s ISIN", as)
+				      .hasValueSatisfying(v -> softly.assertThat(v.value()).as("%s ISIN value", as)
+				                                     .isEqualTo(isin.toUpperCase()));
+				softly.assertThat(product.identifiers().find(OptionProductIdentifierScheme.OSI))
+				      .as("%s OSI", as)
+				      .isEmpty();
 			});
 		}
 
@@ -179,6 +250,20 @@ final class EquityOptionProductTest
 							EquityProducts.commonStock(new ProductId("product:msft"), "Microsoft Corporation"),
 							OptionRight.CALL, LocalDate.of(2026, 1, 16), 500L, OptionExerciseStyle.AMERICAN,
 							OptionSettlementStyle.PHYSICAL_DELIVERY, 100L, "msft  260116c00500000", "msft260116c500")
+			);
+		}
+
+		private static Stream<Arguments> capturesIsinThroughBuilderShortcutCases()
+		{
+			return Stream.of(
+					Arguments.of("AAPL option builder ISIN shortcut",
+							new ProductId("product:aapl-20260116-c-250"),
+							EquityProducts.commonStock(new ProductId("product:aapl"), "Apple Inc."),
+							"us0378331005opt"),
+					Arguments.of("MSFT option builder ISIN shortcut",
+							new ProductId("product:msft-20260116-c-500"),
+							EquityProducts.commonStock(new ProductId("product:msft"), "Microsoft Corporation"),
+							"us5949181045opt")
 			);
 		}
 

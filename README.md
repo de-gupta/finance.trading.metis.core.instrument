@@ -21,6 +21,18 @@ This README is for agents and programmers constructing instrument models against
   the same architectural seam.
 - Shared listing state now lives in `ListingDetails`, and family-specific listing builders extend
   `AbstractListingBuilder`.
+- `ListingDetails` / `AbstractListingBuilder` are internal shared modeling infrastructure; consumers normally work
+  with concrete types like `EquityListing` and `EquityOptionListing`.
+
+## Package layout
+
+- `domain.equity` contains stock/equity product and listing models plus equity-specific factories and identifier
+  wrappers.
+- `domain.option` contains option product and listing models plus option-specific factories and identifier wrappers.
+- `domain.instrument` contains cross-family instrument/listing abstractions and shared listing infrastructure.
+- `domain.product` contains product-level abstractions and shared product value types.
+- `domain.symbol`, `domain.venue`, and `domain.terms` contain reusable listing-facing value objects.
+- `domain.identifier` contains the base identifier value object used by family-specific identifier collections.
 
 ## Core stock model
 
