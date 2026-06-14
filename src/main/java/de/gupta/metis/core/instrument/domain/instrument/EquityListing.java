@@ -1,6 +1,6 @@
 package de.gupta.metis.core.instrument.domain.instrument;
 
-import de.gupta.metis.core.instrument.domain.identifier.EquityListingIdentifier;
+import de.gupta.commons.utility.map.enumMap.ImmutableEnumMap;
 import de.gupta.metis.core.instrument.domain.identifier.EquityListingIdentifierScheme;
 import de.gupta.metis.core.instrument.domain.identifier.EquityListingIdentifiers;
 import de.gupta.metis.core.instrument.domain.identifier.IdentifierValue;
@@ -12,9 +12,6 @@ import de.gupta.metis.core.types.currency.Currency;
 import de.gupta.metis.core.types.quoting.CurrencyPriceUnit;
 import de.gupta.metis.core.types.quoting.PriceQuotingUnit;
 import de.gupta.metis.core.types.quoting.SizeQuotingUnit;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 public record EquityListing<U extends PriceQuotingUnit, V extends SizeQuotingUnit>(InstrumentId id,
                                                                                    EquityProduct product,
@@ -61,12 +58,13 @@ public record EquityListing<U extends PriceQuotingUnit, V extends SizeQuotingUni
 	public static final class Builder<U extends PriceQuotingUnit, V extends SizeQuotingUnit>
 	{
 		private final TradingTerms<U, V> tradingTerms;
-		private final Set<EquityListingIdentifier> identifiers = new LinkedHashSet<>();
 		private InstrumentId id;
 		private EquityProduct product;
 		private VenueSymbol venueSymbol;
 		private ListingStatus status = ListingStatus.ACTIVE;
 		private boolean primaryListing = true;
+		private ImmutableEnumMap<EquityListingIdentifierScheme, IdentifierValue> identifiers =
+				ImmutableEnumMap.empty(EquityListingIdentifierScheme.class);
 
 		public Builder<U, V> id(final InstrumentId id)
 		{
@@ -105,8 +103,7 @@ public record EquityListing<U extends PriceQuotingUnit, V extends SizeQuotingUni
 
 		public Builder<U, V> identifiers(final EquityListingIdentifiers identifiers)
 		{
-			this.identifiers.clear();
-			this.identifiers.addAll(identifiers.values());
+			this.identifiers = identifiers.values();
 			return this;
 		}
 
@@ -122,19 +119,13 @@ public record EquityListing<U extends PriceQuotingUnit, V extends SizeQuotingUni
 
 		public Builder<U, V> identifier(final EquityListingIdentifierScheme scheme, final String value)
 		{
-			return identifier(new EquityListingIdentifier(scheme, new IdentifierValue(value)));
-		}
-
-		public Builder<U, V> identifier(final EquityListingIdentifier identifier)
-		{
-			this.identifiers.removeIf(existing -> existing.scheme() == identifier.scheme());
-			this.identifiers.add(identifier);
+			this.identifiers = this.identifiers.with(scheme, new IdentifierValue(value));
 			return this;
 		}
 
 		public EquityListing<U, V> build()
 		{
-			return new EquityListing<>(id, product, venueSymbol, new EquityListingIdentifiers(Set.copyOf(identifiers)),
+			return new EquityListing<>(id, product, venueSymbol, new EquityListingIdentifiers(identifiers),
 					status, tradingTerms, primaryListing);
 		}
 

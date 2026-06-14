@@ -1,35 +1,30 @@
 package de.gupta.metis.core.instrument.domain.identifier;
 
+import de.gupta.commons.utility.map.enumMap.ImmutableEnumMap;
+
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
-public record EquityProductIdentifiers(Set<EquityProductIdentifier> values)
+public record EquityProductIdentifiers(ImmutableEnumMap<EquityProductIdentifierScheme, IdentifierValue> values)
 {
 	public static EquityProductIdentifiers empty()
 	{
-		return new EquityProductIdentifiers(Set.of());
+		return new EquityProductIdentifiers(ImmutableEnumMap.empty(EquityProductIdentifierScheme.class));
 	}
 
-	public static EquityProductIdentifiers of(final EquityProductIdentifier... values)
+	public static EquityProductIdentifiers of(final Map<EquityProductIdentifierScheme, IdentifierValue> values)
 	{
-		return new EquityProductIdentifiers(Set.of(values));
+		return new EquityProductIdentifiers(ImmutableEnumMap.of(EquityProductIdentifierScheme.class, values));
 	}
 
 	public EquityProductIdentifiers
 	{
 		Objects.requireNonNull(values, "values may not be null");
-		values = Set.copyOf(values);
-
-		if (values.stream().map(EquityProductIdentifier::scheme).distinct().count() != values.size())
-			throw new IllegalArgumentException("Duplicate equity product identifier schemes are not allowed");
 	}
 
 	public Optional<IdentifierValue> find(final EquityProductIdentifierScheme scheme)
 	{
-		return values.stream()
-		             .filter(i -> i.scheme() == scheme)
-		             .map(EquityProductIdentifier::value)
-		             .findFirst();
+		return values.find(scheme);
 	}
 }

@@ -16,6 +16,7 @@
 
     <properties>
         <metis.core.types.version>0.0.2</metis.core.types.version>
+        <athena.version>0.10.2-SNAPSHOT</athena.version>
     </properties>
 
     <scm>

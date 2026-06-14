@@ -1,15 +1,13 @@
 package de.gupta.metis.core.instrument.domain.product;
 
+import de.gupta.commons.utility.map.enumMap.ImmutableEnumMap;
 import de.gupta.commons.utility.string.StringSanitizationUtility;
-import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifier;
 import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifierScheme;
 import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifiers;
 import de.gupta.metis.core.instrument.domain.identifier.IdentifierValue;
 
-import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public record EquityProduct(ProductId id, String issuerName, Optional<ShareClass> shareClass,
                             EquitySecurityType securityType, CountryCode incorporationCountry,
@@ -49,12 +47,13 @@ public record EquityProduct(ProductId id, String issuerName, Optional<ShareClass
 
 	public static final class Builder
 	{
-		private final Set<EquityProductIdentifier> identifiers = new LinkedHashSet<>();
 		private ProductId id;
 		private String issuerName;
 		private Optional<ShareClass> shareClass = Optional.empty();
 		private EquitySecurityType securityType = EquitySecurityType.COMMON_STOCK;
 		private CountryCode incorporationCountry = CountryCode.US;
+		private ImmutableEnumMap<EquityProductIdentifierScheme, IdentifierValue> identifiers =
+				ImmutableEnumMap.empty(EquityProductIdentifierScheme.class);
 
 		public Builder id(final ProductId id)
 		{
@@ -94,8 +93,7 @@ public record EquityProduct(ProductId id, String issuerName, Optional<ShareClass
 
 		public Builder identifiers(final EquityProductIdentifiers identifiers)
 		{
-			this.identifiers.clear();
-			this.identifiers.addAll(identifiers.values());
+			this.identifiers = identifiers.values();
 			return this;
 		}
 
@@ -111,20 +109,14 @@ public record EquityProduct(ProductId id, String issuerName, Optional<ShareClass
 
 		public Builder identifier(final EquityProductIdentifierScheme scheme, final String value)
 		{
-			return identifier(new EquityProductIdentifier(scheme, new IdentifierValue(value)));
-		}
-
-		public Builder identifier(final EquityProductIdentifier identifier)
-		{
-			this.identifiers.removeIf(existing -> existing.scheme() == identifier.scheme());
-			this.identifiers.add(identifier);
+			this.identifiers = this.identifiers.with(scheme, new IdentifierValue(value));
 			return this;
 		}
 
 		public EquityProduct build()
 		{
 			return new EquityProduct(id, issuerName, shareClass, securityType, incorporationCountry,
-					new EquityProductIdentifiers(Set.copyOf(identifiers)));
+					new EquityProductIdentifiers(identifiers));
 		}
 	}
 }
