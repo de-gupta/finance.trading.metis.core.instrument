@@ -17,12 +17,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("EquityListing#nasdaq")
 final class EquityListingTest
 {
-
 	@Nested
 	@DisplayName("when creating a NASDAQ listing")
 	final class WhenCreatingANasdaqListing
 	{
-
 		@Test
 		@DisplayName("uses venue-scoped symbol and default cash equity terms")
 		void usesVenueScopedSymbolAndDefaultCashEquityTerms()
