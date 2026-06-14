@@ -13,8 +13,14 @@ This README is for agents and programmers constructing instrument models against
 - `Instrument` is the exact tradable thing.
 - For stocks, `EquityProduct` is the share/security definition and `EquityListing` is the venue-specific tradable
   listing.
+- For options, `EquityOptionProduct` is the contract definition and `EquityOptionListing` is the venue-specific
+  tradable option line.
 - `VenueSymbol` binds venue and symbol together so ticker is never treated as global identity.
 - `TradingTerms` attaches quoting and settlement meaning to raw price/size types from `metis.core.types`.
+- Derivatives extend `DerivativeProduct`, and options extend `OptionProduct`, so later derivative families can reuse
+  the same architectural seam.
+- Shared listing state now lives in `ListingDetails`, and family-specific listing builders extend
+  `AbstractListingBuilder`.
 
 ## Core stock model
 
@@ -56,6 +62,50 @@ Interpretation:
 - Apple on Nasdaq and Apple on another exchange are different `EquityListing` values.
 - They may still point to the same `EquityProduct`.
 
+## Core option model
+
+### `EquityOptionProduct`
+
+Represents the option contract itself.
+
+Fields:
+
+- `ProductId id`
+- `EquityProduct underlying`
+- `OptionRight right`
+- `LocalDate expiryDate`
+- `StrikePrice<?> strikePrice`
+- `OptionExerciseStyle exerciseStyle`
+- `OptionSettlementStyle settlementStyle`
+- `ContractSize contractSize`
+- `OptionProductIdentifiers identifiers`
+
+Interpretation:
+
+- This is the economic contract definition.
+- It points to the underlying equity security, not to a specific stock listing.
+- `contractSize` is the number of underlying units represented by one contract.
+- `strikePrice` carries both the raw `PriceType` and its quoting convention.
+
+### `EquityOptionListing`
+
+Represents the exact tradable listed option line.
+
+Fields:
+
+- `InstrumentId id`
+- `EquityOptionProduct<?> product`
+- `VenueSymbol venueSymbol`
+- `OptionListingIdentifiers identifiers`
+- `ListingStatus status`
+- `TradingTerms<?, ?> tradingTerms`
+- `boolean primaryListing`
+
+Interpretation:
+
+- The option contract and the option listing are different concepts, just like stock product vs stock listing.
+- The listing carries venue identity and premium quoting terms.
+
 ## Happy path: create a normal US common stock listing
 
 Use the utility factories.
@@ -86,9 +136,9 @@ What this gives you:
 - round lot = `100`
 - `primaryListing = true`
 
-## Richer case: explicit product metadata
+## Richer case: explicit stock metadata
 
-Use the builder when identifiers or share class matter.
+Use the builders when identifiers or non-default stock metadata matter.
 
 ```java
 var product = EquityProduct.builder()
@@ -100,13 +150,7 @@ var product = EquityProduct.builder()
                            .isin("US02079K3059")
                            .cusip("02079K305")
                            .build();
-```
 
-## Richer case: explicit listing metadata
-
-Use the builder when listing identifiers or non-default listing settings matter.
-
-```java
 var listing = EquityListing.builder(TradingTerms.cashEquity(Currency.USD.INSTANCE))
                            .id(new InstrumentId("instrument:xnas:goog"))
                            .product(product)
@@ -118,12 +162,82 @@ var listing = EquityListing.builder(TradingTerms.cashEquity(Currency.USD.INSTANC
                            .build();
 ```
 
+## Happy path: create a standard listed equity option
+
+Use the product factory plus the USD-listed option factory.
+
+```java
+var underlying = EquityProducts.commonStock(
+		new ProductId("product:aapl"),
+		"Apple Inc."
+);
+
+var optionProduct = EquityOptionProducts.standardContract(
+		new ProductId("product:aapl-20260116-c-250"),
+		underlying,
+		OptionRight.CALL,
+		LocalDate.of(2026, 1, 16),
+		StrikePrice.of(250, Currency.USD.INSTANCE),
+		OptionExerciseStyle.AMERICAN
+);
+
+var optionListing = EquityOptionListings.usdListed(
+		new InstrumentId("instrument:xcbo:aapl-20260116-c-250"),
+		optionProduct,
+		VenueSymbol.of(new Venue("CBOE", "Chicago Board Options Exchange", "XCBO", CountryCode.US),
+				"AAPL  260116C00250000"),
+		ListingStatus.ACTIVE
+);
+```
+
+What this gives you:
+
+- settlement style = `PHYSICAL_DELIVERY`
+- contract size = `100` underlying units
+- no option product/listing identifiers yet
+- premium quoted in settlement currency
+- size quoted in contracts
+- option round lot = `1`
+- `primaryListing = true`
+
+## Richer case: explicit option metadata
+
+Use the builders when settlement style, contract size, or option identifiers matter.
+
+```java
+var optionProduct = EquityOptionProduct.builder()
+                                       .id(new ProductId("product:googl-20260320-p-150"))
+                                       .underlying(product)
+                                       .right(OptionRight.PUT)
+                                       .expiryDate(LocalDate.of(2026, 3, 20))
+                                       .strikePrice(StrikePrice.of(150, Currency.USD.INSTANCE))
+                                       .exerciseStyle(OptionExerciseStyle.EUROPEAN)
+                                       .settlementStyle(OptionSettlementStyle.CASH_SETTLED)
+                                       .contractSize(ContractSize.of(100))
+                                       .osi("GOOGL  260320P00150000")
+                                       .build();
+
+var optionListing = EquityOptionListings.usdBuilder(new Venue("CBOE", "Chicago Board Options Exchange", "XCBO",
+												CountryCode.US), "GOOGL  260320P00150000")
+                                        .id(new InstrumentId("instrument:xcbo:googl-20260320-p-150"))
+                                        .product(optionProduct)
+                                        .status(ListingStatus.ACTIVE)
+                                        .primaryListing(false)
+                                        .opra("GOOGL  260320P00150000")
+                                        .compositeFigi("BBG00OPTION123")
+                                        .build();
+```
+
 ## When to use product identifiers vs listing identifiers
 
 - Put identifiers on `EquityProduct` when they describe the security/product itself.
   Example: ISIN, CUSIP.
 - Put identifiers on `EquityListing` when they describe the listed trading line.
   Example: composite FIGI, share-class FIGI.
+- Put identifiers on `EquityOptionProduct` when they describe the contract definition itself.
+  Example: OSI, OCC series key.
+- Put identifiers on `EquityOptionListing` when they describe the listed option line.
+  Example: OPRA code, composite FIGI, exchange FIGI.
 
 ## Trading terms rule
 
@@ -142,11 +256,26 @@ This means:
 - round lot = `100`
 - settlement currency = USD
 
+For listed options, prefer:
+
+```java
+TradingTerms.listedOption(Currency.USD.INSTANCE)
+```
+
+This means:
+
+- premium quoted in USD money scale
+- size quoted in whole contracts
+- round lot = `1`
+- settlement currency = USD
+
 ## Modeling rules
 
 - Do not treat ticker alone as identity.
 - Do not put venue-specific facts on `EquityProduct`.
 - Do not put product/security facts on `EquityListing`.
+- Do not put venue-specific option facts on `EquityOptionProduct`.
+- Do not put contract-definition facts on `EquityOptionListing`.
 - Do not invent IDs inside this library unless your surrounding system has a canonical derivation rule.
 - Prefer the utility factories for simple cases.
 - Prefer builders when identifiers or non-default metadata are present.
@@ -162,8 +291,12 @@ This means:
 
 ## Practical guidance for agents
 
-- If the task is “model a normal listed US stock”, use `EquityProducts.commonStock(...)` and
+- If the task is "model a normal listed US stock", use `EquityProducts.commonStock(...)` and
   `EquityListings.nasdaq(...)`.
-- If the task includes `ISIN`, `CUSIP`, share class, or listing FIGIs, switch to the builders.
+- If the task includes `ISIN`, `CUSIP`, share class, or listing FIGIs, switch to the stock builders.
+- If the task is "model a normal listed equity option", use `EquityOptionProducts.standardContract(...)` and
+  `EquityOptionListings.usdListed(...)`.
+- If the task includes OSI, OPRA, settlement style, contract size, or non-default option metadata, switch to the
+  option builders.
 - If you are adding a new instrument family later, preserve the same split:
   product/security definition first, tradable instrument/listing second.

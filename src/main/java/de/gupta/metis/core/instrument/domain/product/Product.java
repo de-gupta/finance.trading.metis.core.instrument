@@ -1,6 +1,6 @@
 package de.gupta.metis.core.instrument.domain.product;
 
-public sealed interface Product permits EquityProduct
+public interface Product
 {
 	ProductId id();
 }

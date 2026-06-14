@@ -1,5 +1,6 @@
-package de.gupta.metis.core.instrument.domain.identifier;
+package de.gupta.metis.core.instrument.domain.equity;
 
+import de.gupta.metis.core.instrument.domain.identifier.IdentifierValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,8 +12,8 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("EquityProductIdentifiers")
-final class EquityProductIdentifiersTest
+@DisplayName("EquityListingIdentifiers")
+final class EquityListingIdentifiersTest
 {
 	@Nested
 	@DisplayName("when empty")
@@ -21,9 +22,9 @@ final class EquityProductIdentifiersTest
 		@ParameterizedTest(name = "{0}")
 		@MethodSource("returnsNoIdentifierForAnySchemeCases")
 		@DisplayName("returns no identifier for any scheme")
-		void returnsNoIdentifierForAnyScheme(final String as, final EquityProductIdentifierScheme scheme)
+		void returnsNoIdentifierForAnyScheme(final String as, final EquityListingIdentifierScheme scheme)
 		{
-			var identifiers = EquityProductIdentifiers.empty();
+			var identifiers = EquityListingIdentifiers.empty();
 
 			assertThat(identifiers.find(scheme)).as(as).isEmpty();
 		}
@@ -31,8 +32,10 @@ final class EquityProductIdentifiersTest
 		private static Stream<Arguments> returnsNoIdentifierForAnySchemeCases()
 		{
 			return Stream.of(
-					Arguments.of("ISIN lookup on empty identifiers", EquityProductIdentifierScheme.ISIN),
-					Arguments.of("CUSIP lookup on empty identifiers", EquityProductIdentifierScheme.CUSIP)
+					Arguments.of("composite FIGI lookup on empty identifiers",
+							EquityListingIdentifierScheme.COMPOSITE_FIGI),
+					Arguments.of("share-class FIGI lookup on empty identifiers",
+							EquityListingIdentifierScheme.SHARE_CLASS_FIGI)
 			);
 		}
 	}
@@ -44,12 +47,12 @@ final class EquityProductIdentifiersTest
 		@ParameterizedTest(name = "{0}")
 		@MethodSource("returnsTheStoredIdentifierBySchemeCases")
 		@DisplayName("returns the stored identifier by scheme")
-		void returnsTheStoredIdentifierByScheme(final String as, final EquityProductIdentifierScheme scheme,
+		void returnsTheStoredIdentifierByScheme(final String as, final EquityListingIdentifierScheme scheme,
 		                                        final String expectedValue)
 		{
-			var identifiers = EquityProductIdentifiers.of(Map.of(
-					EquityProductIdentifierScheme.ISIN, new IdentifierValue("us0378331005"),
-					EquityProductIdentifierScheme.CUSIP, new IdentifierValue("037833100")
+			var identifiers = EquityListingIdentifiers.of(Map.of(
+					EquityListingIdentifierScheme.COMPOSITE_FIGI, new IdentifierValue("bbg000b9xry4"),
+					EquityListingIdentifierScheme.SHARE_CLASS_FIGI, new IdentifierValue("bbg001s5pql7")
 			));
 
 			assertThat(identifiers.find(scheme))
@@ -60,8 +63,10 @@ final class EquityProductIdentifiersTest
 		private static Stream<Arguments> returnsTheStoredIdentifierBySchemeCases()
 		{
 			return Stream.of(
-					Arguments.of("ISIN lookup", EquityProductIdentifierScheme.ISIN, "US0378331005"),
-					Arguments.of("CUSIP lookup", EquityProductIdentifierScheme.CUSIP, "037833100")
+					Arguments.of("composite FIGI lookup", EquityListingIdentifierScheme.COMPOSITE_FIGI,
+							"BBG000B9XRY4"),
+					Arguments.of("share-class FIGI lookup", EquityListingIdentifierScheme.SHARE_CLASS_FIGI,
+							"BBG001S5PQL7")
 			);
 		}
 	}

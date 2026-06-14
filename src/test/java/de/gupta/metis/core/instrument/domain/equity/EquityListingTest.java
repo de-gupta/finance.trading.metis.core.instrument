@@ -1,12 +1,11 @@
-package de.gupta.metis.core.instrument.domain.instrument;
+package de.gupta.metis.core.instrument.domain.equity;
 
-import de.gupta.metis.core.instrument.domain.identifier.EquityListingIdentifierScheme;
-import de.gupta.metis.core.instrument.domain.identifier.EquityListingIdentifiers;
 import de.gupta.metis.core.instrument.domain.identifier.IdentifierValue;
+import de.gupta.metis.core.instrument.domain.instrument.InstrumentId;
+import de.gupta.metis.core.instrument.domain.instrument.ListingDetails;
+import de.gupta.metis.core.instrument.domain.instrument.ListingStatus;
 import de.gupta.metis.core.instrument.domain.product.CountryCode;
-import de.gupta.metis.core.instrument.domain.product.EquityProduct;
 import de.gupta.metis.core.instrument.domain.product.ProductId;
-import de.gupta.metis.core.instrument.domain.product.ShareClass;
 import de.gupta.metis.core.instrument.domain.symbol.Symbol;
 import de.gupta.metis.core.instrument.domain.symbol.VenueSymbol;
 import de.gupta.metis.core.instrument.domain.terms.TradingTerms;
@@ -156,8 +155,9 @@ final class EquityListingTest
 		                                                         final ListingStatus status,
 		                                                         final boolean primaryListing)
 		{
-			var listing = new EquityListing<>(instrumentId, product, venueSymbol, null, status,
-					TradingTerms.cashEquity(Currency.USD.INSTANCE), primaryListing);
+			var listing = new EquityListing<>(product,
+					new ListingDetails<>(instrumentId, venueSymbol, null, status,
+							TradingTerms.cashEquity(Currency.USD.INSTANCE), primaryListing));
 
 			assertSoftly(softly ->
 			{

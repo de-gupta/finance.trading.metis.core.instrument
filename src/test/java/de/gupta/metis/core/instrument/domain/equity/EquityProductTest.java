@@ -1,8 +1,8 @@
-package de.gupta.metis.core.instrument.domain.product;
+package de.gupta.metis.core.instrument.domain.equity;
 
-import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifierScheme;
-import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifiers;
 import de.gupta.metis.core.instrument.domain.identifier.IdentifierValue;
+import de.gupta.metis.core.instrument.domain.product.CountryCode;
+import de.gupta.metis.core.instrument.domain.product.ProductId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;

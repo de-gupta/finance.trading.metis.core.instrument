@@ -1,4 +1,4 @@
-package de.gupta.metis.core.instrument.domain.product;
+package de.gupta.metis.core.instrument.domain.equity;
 
 public enum EquitySecurityType
 {

@@ -1,6 +1,7 @@
-package de.gupta.metis.core.instrument.domain.product;
+package de.gupta.metis.core.instrument.domain.equity;
 
-import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifiers;
+import de.gupta.metis.core.instrument.domain.product.CountryCode;
+import de.gupta.metis.core.instrument.domain.product.ProductId;
 
 import java.util.Optional;
 

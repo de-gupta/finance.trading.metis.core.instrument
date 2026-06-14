@@ -1,10 +1,11 @@
-package de.gupta.metis.core.instrument.domain.product;
+package de.gupta.metis.core.instrument.domain.equity;
 
 import de.gupta.commons.utility.map.enumMap.ImmutableEnumMap;
 import de.gupta.commons.utility.string.StringSanitizationUtility;
-import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifierScheme;
-import de.gupta.metis.core.instrument.domain.identifier.EquityProductIdentifiers;
 import de.gupta.metis.core.instrument.domain.identifier.IdentifierValue;
+import de.gupta.metis.core.instrument.domain.product.CountryCode;
+import de.gupta.metis.core.instrument.domain.product.Product;
+import de.gupta.metis.core.instrument.domain.product.ProductId;
 
 import java.util.Objects;
 import java.util.Optional;

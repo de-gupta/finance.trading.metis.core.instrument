@@ -1,4 +1,4 @@
-package de.gupta.metis.core.instrument.domain.identifier;
+package de.gupta.metis.core.instrument.domain.equity;
 
 public enum EquityListingIdentifierScheme
 {

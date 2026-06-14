@@ -8,8 +8,8 @@ import de.gupta.metis.core.instrument.domain.venue.Venue;
 import de.gupta.metis.core.types.quoting.PriceQuotingUnit;
 import de.gupta.metis.core.types.quoting.SizeQuotingUnit;
 
-public sealed interface ListedInstrument<P extends Product, U extends PriceQuotingUnit, V extends SizeQuotingUnit>
-		extends Instrument<P> permits EquityListing
+public interface ListedInstrument<P extends Product, U extends PriceQuotingUnit, V extends SizeQuotingUnit>
+		extends Instrument<P>
 {
 	VenueSymbol venueSymbol();
 

@@ -33,6 +33,19 @@ public record TradingTerms<U extends PriceQuotingUnit, V extends SizeQuotingUnit
 		return cashEquity(settlementCurrency, SizeTypeFactory.of(100));
 	}
 
+	public static <C extends Currency> TradingTerms<CurrencyPriceUnit<C>, SizeQuotingUnit.Contracts> listedOption(
+			final C settlementCurrency, final SizeType roundLot)
+	{
+		return TradingTerms.of(PriceQuotingConvention.currency(settlementCurrency),
+				SizeQuotingConvention.contracts(0), roundLot, settlementCurrency);
+	}
+
+	public static <C extends Currency> TradingTerms<CurrencyPriceUnit<C>, SizeQuotingUnit.Contracts> listedOption(
+			final C settlementCurrency)
+	{
+		return listedOption(settlementCurrency, SizeTypeFactory.of(1));
+	}
+
 	public TradingTerms
 	{
 		Unfolding.beckon(roundLot)

@@ -1,7 +1,8 @@
-package de.gupta.metis.core.instrument.domain.instrument;
+package de.gupta.metis.core.instrument.domain.equity;
 
-import de.gupta.metis.core.instrument.domain.identifier.EquityListingIdentifiers;
-import de.gupta.metis.core.instrument.domain.product.EquityProduct;
+import de.gupta.metis.core.instrument.domain.instrument.InstrumentId;
+import de.gupta.metis.core.instrument.domain.instrument.ListingDetails;
+import de.gupta.metis.core.instrument.domain.instrument.ListingStatus;
 import de.gupta.metis.core.instrument.domain.symbol.VenueSymbol;
 import de.gupta.metis.core.instrument.domain.terms.TradingTerms;
 import de.gupta.metis.core.instrument.domain.venue.Venue;
@@ -19,13 +20,15 @@ public final class EquityListings
 	)
 	{
 		return new EquityListing<>(
-				id,
 				product,
-				VenueSymbol.of(Venue.NASDAQ, symbol),
-				EquityListingIdentifiers.empty(),
-				status,
-				TradingTerms.cashEquity(Currency.USD.INSTANCE),
-				true
+				new ListingDetails<>(
+						id,
+						VenueSymbol.of(Venue.NASDAQ, symbol),
+						EquityListingIdentifiers.empty(),
+						status,
+						TradingTerms.cashEquity(Currency.USD.INSTANCE),
+						true
+				)
 		);
 	}
 
