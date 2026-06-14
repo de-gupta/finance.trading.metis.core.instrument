@@ -4,7 +4,7 @@ import de.gupta.aletheia.functional.Unfolding;
 import de.gupta.commons.utility.exception.ExceptionHelper;
 import de.gupta.metis.core.types.currency.Currency;
 import de.gupta.metis.core.types.exception.IncompatibleInputException;
-import de.gupta.metis.core.types.number.TradingNumberFactory;
+import de.gupta.metis.core.types.number.TradingNumber;
 import de.gupta.metis.core.types.quoting.*;
 import de.gupta.metis.core.types.size.SizeType;
 import de.gupta.metis.core.types.size.SizeTypeFactory;
@@ -35,11 +35,9 @@ public record TradingTerms<U extends PriceQuotingUnit, V extends SizeQuotingUnit
 
 	public TradingTerms
 	{
-		// TODO: simpolify once there is a concept of positiveness in TradingNumber
 		Unfolding.beckon(roundLot)
 		         .metamorphose(SizeType::value)
-		         .discern(v -> v.isGreaterThan(TradingNumberFactory.zero()),
-						 ExceptionHelper.iaeFrom("Round lot must be positive"));
+		         .discern(TradingNumber::isPositive, ExceptionHelper.iaeFrom("Round lot must be positive"));
 
 		Unfolding.beckon(priceConvention.unit())
 		         .evolve(u -> u instanceof CurrencyPriceUnit<?>, u -> (CurrencyPriceUnit<?>) u)

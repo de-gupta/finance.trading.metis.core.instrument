@@ -1,6 +1,7 @@
 package de.gupta.metis.core.instrument.domain.identifier;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public record EquityListingIdentifiers(Set<EquityListingIdentifier> values)
@@ -22,5 +23,13 @@ public record EquityListingIdentifiers(Set<EquityListingIdentifier> values)
 
 		if (values.stream().map(EquityListingIdentifier::scheme).distinct().count() != values.size())
 			throw new IllegalArgumentException("Duplicate equity listing identifier schemes are not allowed");
+	}
+
+	public Optional<IdentifierValue> find(final EquityListingIdentifierScheme scheme)
+	{
+		return values.stream()
+		             .filter(i -> i.scheme() == scheme)
+		             .map(EquityListingIdentifier::value)
+		             .findFirst();
 	}
 }
