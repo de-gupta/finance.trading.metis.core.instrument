@@ -7,14 +7,15 @@ import de.gupta.metis.core.instrument.domain.venue.Venue;
 import de.gupta.metis.core.types.quoting.PriceQuotingUnit;
 import de.gupta.metis.core.types.quoting.SizeQuotingUnit;
 
-public final class EquityListing<P extends EquityProduct> implements Listing<P>
+public final class EquityListing<P extends EquityProduct, U extends PriceQuotingUnit, V extends SizeQuotingUnit>
+		implements ListedInstrument<P, U, V>
 {
 	private final InstrumentId id;
 	private final P product;
 	private final Venue venue;
 	private final Symbol symbol;
 	private final ListingStatus status;
-	private final TradingTerms<PriceQuotingUnit, SizeQuotingUnit> tradingTerms;
+	private final TradingTerms<U, V> tradingTerms;
 
 	@Override
 	public InstrumentId id()
@@ -41,7 +42,7 @@ public final class EquityListing<P extends EquityProduct> implements Listing<P>
 	}
 
 	@Override
-	public TradingTerms<PriceQuotingUnit, SizeQuotingUnit> tradingTerms()
+	public TradingTerms<U, V> tradingTerms()
 	{
 		return tradingTerms;
 	}
@@ -54,7 +55,7 @@ public final class EquityListing<P extends EquityProduct> implements Listing<P>
 
 	private EquityListing(final InstrumentId id, final P product, final Venue venue, final Symbol symbol,
 	                      final ListingStatus status,
-	                      final TradingTerms<PriceQuotingUnit, SizeQuotingUnit> tradingTerms)
+	                      final TradingTerms<U, V> tradingTerms)
 	{
 		this.id = id;
 		this.product = product;

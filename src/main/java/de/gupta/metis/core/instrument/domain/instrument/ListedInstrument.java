@@ -7,7 +7,8 @@ import de.gupta.metis.core.instrument.domain.venue.Venue;
 import de.gupta.metis.core.types.quoting.PriceQuotingUnit;
 import de.gupta.metis.core.types.quoting.SizeQuotingUnit;
 
-public sealed interface Listing<P extends Product> extends Instrument<P> permits EquityListing
+public sealed interface ListedInstrument<P extends Product, U extends PriceQuotingUnit, V extends SizeQuotingUnit>
+		extends Instrument<P> permits EquityListing
 {
 	P product();
 
@@ -15,7 +16,7 @@ public sealed interface Listing<P extends Product> extends Instrument<P> permits
 
 	Symbol symbol();
 
-	TradingTerms<PriceQuotingUnit, SizeQuotingUnit> tradingTerms();
+	TradingTerms<U, V> tradingTerms();
 
 	ListingStatus status();
 }
